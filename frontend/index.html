@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachable Voice Automation</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #0b1020;
+            color: #f1f5f9;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 45px;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .status {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #64748b;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 40px 20px;
+            background: #131b30;
+            border: 1px solid #27334d;
+            border-radius: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(28px, 5vw, 42px);
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .mic-button {
+            width: 110px;
+            height: 110px;
+            border: none;
+            border-radius: 50%;
+            margin: 35px 0 20px;
+            background: #6366f1;
+            color: white;
+            font-size: 42px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .mic-button:hover {
+            background: #818cf8;
+            transform: scale(1.05);
+        }
+
+        .mic-button.listening {
+            background: #dc2626;
+            box-shadow: 0 0 0 12px #dc262633;
+        }
+
+        #voiceStatus {
+            color: #cbd5e1;
+            min-height: 24px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-top: 25px;
+            align-items: start;
+        }
+
+        .card {
+            padding: 24px;
+            border-radius: 18px;
+            background: #131b30;
+            border: 1px solid #27334d;
+            min-width: 0;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        button.action {
+            border: 1px solid #3b4763;
+            border-radius: 10px;
+            background: #202b45;
+            color: white;
+            padding: 11px 15px;
+            cursor: pointer;
+        }
+
+        button.action:hover {
+            background: #303e60;
+        }
+
+        .command-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        #browserCommand {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            color: white;
+            background: #1e293b;
+            border: 1px solid #64748b;
+            border-radius: 8px;
+            cursor: text;
+            pointer-events: auto;
+            user-select: text;
+        }
+
+        #workflowList {
+            margin-top: 16px;
+            overflow-wrap: anywhere;
+        }
+
+        .workflow-item {
+            padding: 12px;
+            margin-top: 10px;
+            background: #202b45;
+            border: 1px solid #3b4763;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .activity {
+            margin-top: 25px;
+        }
+
+        #activityLog {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-top: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+
+        <header>
+            <div class="brand">🎙️ Teachable Voice</div>
+
+            <div class="status">
+                <span class="dot"></span>
+                <span id="connectionStatus">Checking...</span>
+            </div>
+        </header>
+
+        <section class="hero">
+            <h1>Your voice. Your commands.</h1>
+            <p>Control your digital workspace using your voice.</p>
+
+            <button
+                class="mic-button"
+                id="micButton"
+                aria-label="Start voice input"
+            >🎤</button>
+
+            <p id="voiceStatus">
+                Click the microphone to try voice input.
+            </p>
+        </section>
+
+        <section class="grid">
+
+            <!-- Browser Control -->
+            <article class="card">
+                <h2>🌐 Browser Control</h2>
+                <p>Open websites and search the web using voice commands.</p>
+
+                <button class="action" onclick="sendBrowserCommand('open youtube')">
+                    Open YouTube
+                </button>
+
+                <button class="action" onclick="sendBrowserCommand('open google')">
+                    Open Google
+                </button>
+
+                <button class="action" onclick="sendBrowserCommand('open github')">
+                    Open GitHub
+                </button>
+                <div class="command-box">
+                    <input
+                        type="text"
+                        id="browserCommand"
+                        placeholder="Try: search google for Java tutorials"
+                    />
+
+                    <button
+                        class="action"
+                        onclick="runCustomBrowserCommand()"
+                    >
+                        Run Command
+                    </button>
+                </div>
+
+                <div id="browserStatus" class="workflow-item">
+                    Browser controls are ready.
+                </div>
+            </article>
+
+            <!-- Technical Workflow -->
+            <article class="card">
+                <h2>⚙️ Technical Workflow</h2>
+                <p>View workflows saved in your MongoDB database.</p>
+
+                <button
+                    class="action"
+                    onclick="loadWorkflows()"
+                >
+                    View Saved Workflows
+                </button>
+
+                <div id="workflowList"></div>
+            </article>
+
+            <!-- Smart Timer -->
+            <article class="card">
+                <h2>⏱️ Smart Timer</h2>
+                <p>Manage your study sessions and timers.</p>
+
+                <button
+                    class="action"
+                    onclick="showMessage('Timer')"
+                >
+                    Timer controls
+                </button>
+            </article>
+
+            <!-- Automation -->
+            <article class="card">
+                <h2>🤖 Automation</h2>
+                <p>Run tasks through your voice automation assistant.</p>
+
+                <button
+                    class="action"
+                    onclick="showMessage('Automation')"
+                >
+                    View controls
+                </button>
+            </article>
+
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="card activity">
+            <h2>Recent Activity</h2>
+            <div id="activityLog">Dashboard initialized.</div>
+        </section>
+
+        <footer>
+            Teachable Voice Automation · Built with FastAPI
+        </footer>
+
+    </main>
+
+    <script>
+        const micButton = document.getElementById("micButton");
+        const voiceStatus = document.getElementById("voiceStatus");
+        const activityLog = document.getElementById("activityLog");
+        const workflowList = document.getElementById("workflowList");
+
+        const API_URL = "http://127.0.0.1:8000";
+
+        function showMessage(feature) {
+            const message = feature + " selected — connection coming next.";
+            voiceStatus.textContent = message;
+            activityLog.textContent = message;
+        }
+
+        micButton.addEventListener("click", () => {
+            voiceStatus.textContent = "Microphone connection will be added in the next step.";
+            activityLog.textContent = "Microphone button clicked.";
+        });
+
+        async function checkBackend() {
+            const status = document.getElementById("connectionStatus");
+            const dot = document.querySelector(".dot");
+
+            try {
+                const response = await fetch(API_URL + "/");
+
+                if (!response.ok) {
+                    throw new Error("Backend unavailable");
+                }
+
+                status.textContent = "Backend connected";
+                dot.style.background = "#22c55e";
+            } catch (error) {
+                status.textContent = "Backend offline";
+                dot.style.background = "#ef4444";
+            }
+        }
+
+        async function loadWorkflows() {
+            workflowList.textContent = "Loading workflows...";
+
+            try {
+                const response = await fetch(API_URL + "/workflow");
+
+                if (!response.ok) {
+                    throw new Error("Could not fetch workflows");
+                }
+
+                const workflows = await response.json();
+                workflowList.replaceChildren();
+
+                if (!Array.isArray(workflows) || workflows.length === 0) {
+                    workflowList.textContent = "No workflows saved yet.";
+                    voiceStatus.textContent = "No saved workflows found.";
+                    activityLog.textContent = "Checked saved workflows: none found.";
+                    return;
+                }
+
+                workflows.forEach((workflow) => {
+                    const item = document.createElement("div");
+                    item.className = "workflow-item";
+
+                    const name = document.createElement("strong");
+                    name.textContent = workflow.name ?? "Unnamed workflow";
+
+                    const details = document.createElement("div");
+                    details.textContent = "Action: " + (workflow.action ?? "Not specified");
+
+                    const value = document.createElement("div");
+                    value.textContent = "Value: " + (workflow.value ?? "Not specified");
+
+                    item.append(name, details, value);
+                    workflowList.appendChild(item);
+                });
+
+                voiceStatus.textContent = "Saved workflows loaded successfully.";
+                activityLog.textContent = "Loaded " + workflows.length + " saved workflow(s).";
+
+            } catch (error) {
+                workflowList.textContent = "Could not load workflows. Check the backend connection.";
+                voiceStatus.textContent = "Failed to load workflows.";
+                activityLog.textContent = "Workflow loading failed: " + error.message;
+            }
+        }
+
+        checkBackend();
+        setInterval(checkBackend, 5000);
+
+        async function sendBrowserCommand(command) {
+            const status = document.getElementById("browserStatus");
+            status.textContent = `Running: ${command}...`;
+
+            try {
+                const response = await fetch(`${API_URL}/browser/command`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ command })
+                });
+
+                const result = await response.json();
+                status.textContent = result.message || "Command completed.";
+
+                if (!response.ok || !result.success) {
+                    status.textContent = `Error: ${status.textContent}`;
+                }
+            } catch (error) {
+                status.textContent = "Could not connect to backend. Check that the server is running.";
+            }
+        }
+
+        async function runCustomBrowserCommand() {
+            const input = document.getElementById("browserCommand");
+            const command = input.value.trim();
+
+            if (!command) {
+                document.getElementById("browserStatus").textContent = "Please enter a browser command.";
+                return;
+            }
+
+            await sendBrowserCommand(command);
+        }
+
+        // Allow pressing 'Enter' key inside the input box to run command
+        document.getElementById("browserCommand").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                runCustomBrowserCommand();
+            }
+        });
+    </script>
+</body>
+</html>

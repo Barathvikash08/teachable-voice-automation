@@ -1,8 +1,20 @@
-venv/
-.venv/
+
+# Python
 __pycache__/
 *.py[cod]
+*.pyd
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment variables and secrets
 .env
 .env.*
 !.env.example
+
+# Editor files
+.vscode/
+
+# Test and cache files
 .pytest_cache/

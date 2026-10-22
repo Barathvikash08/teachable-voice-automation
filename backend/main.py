@@ -6,12 +6,56 @@ import asyncio
 from datetime import datetime, timezone
 import winsound
 import subprocess
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 active_timers = set()
 
 load_dotenv()
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+from voice_control import start_edge, open_application, close_application
+
+
+class BrowserCommand(BaseModel):
+    command: str
+
+
+@app.post("/browser/command")
+def browser_command(data: BrowserCommand):
+    command = data.command.strip().lower()
+
+    if not command:
+        return {"success": False, "message": "Please enter a command."}
+
+    if not start_edge():
+        return {
+            "success": False,
+            "message": "Could not start Microsoft Edge."
+        }
+
+    if close_application(command):
+        return {"success": True, "message": f"Executed: {command}"}
+
+    if open_application(command):
+        return {"success": True, "message": f"Executed: {command}"}
+
+    return {
+        "success": False,
+        "message": "Command not recognized. Try 'open youtube' or 'search google for Java tutorials'."
+    }
+
 
 client = AsyncMongoClient(os.getenv("MONGO_URI"))
 
@@ -96,9 +140,13 @@ async def finish_timer(name: str, minutes: int):
     finally:
         active_timers.discard(name)
 
+
 @app.post("/workflow/run")
 async def run_workflow(name: str):
-    workflow = await workflows_collection.find_one({"name": name})
+    workflow = await workflows_collection.find_one(
+    {"name": name},
+    sort=[("_id", -1)]
+    )
 
     if not workflow:
         await history_collection.insert_one({
@@ -109,17 +157,18 @@ async def run_workflow(name: str):
         })
         return {"message": "Workflow not found"}
 
-    action = workflow["action"]
+    action = workflow.get("action")
     value = workflow.get("value")
 
     if action == "start_timer":
         minutes = value
+
         if name in active_timers:
             return {
-                    "message": f"Timer '{name}' is already running"
-                }
+                "message": f"Timer '{name}' is already running"
+            }
 
-        if minutes <= 0:
+        if not isinstance(minutes, (int, float)) or minutes <= 0:
             await history_collection.insert_one({
                 "name": name,
                 "action": action,
@@ -145,6 +194,33 @@ async def run_workflow(name: str):
         return {
             "message": f"Timer started for {minutes} minutes",
             "action": "start_timer",
+            "value": minutes
+        }
+
+    if action == "study_mode":
+        minutes = value if isinstance(value, (int, float)) else 45
+
+        if minutes <= 0:
+            return {"message": "Study duration must be greater than zero"}
+
+        if name in active_timers:
+            return {"message": f"Timer '{name}' is already running"}
+
+        active_timers.add(name)
+        asyncio.create_task(finish_timer(name, minutes))
+
+        await history_collection.insert_one({
+            "name": name,
+            "action": action,
+            "value": minutes,
+            "status": "success",
+            "message": f"Study mode started with a {minutes}-minute timer",
+            "timestamp": datetime.utcnow()
+        })
+
+        return {
+            "message": f"Study mode started with a {minutes}-minute timer",
+            "action": "study_mode",
             "value": minutes
         }
 

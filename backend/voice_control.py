@@ -1,6 +1,7 @@
 import re
 import subprocess
 from urllib.parse import quote
+from pydantic import BaseModel
 
 import requests
 import speech_recognition as sr
@@ -223,11 +224,19 @@ def play_youtube_video(command):
 
 
 
+
 def open_application(command):
     command = command.lower().strip()
 
-    # Open a new tab
-    new_tab_match = re.match(r"^open a new tab with (.+)$", command)
+    # Open a new blank tab
+    if command in ["open a new tab", "new tab", "create a new tab"]:
+        return open_edge_website("new tab", "about:blank", new_tab=True)
+
+    # Open a new tab with a website
+    new_tab_match = re.match(
+        r"^(?:open|create)\s+(?:a\s+)?new tab(?:\s+with|\s+for)?\s+(.+)$",
+        command,
+    )
 
     if new_tab_match:
         target = new_tab_match.group(1).strip()
@@ -246,10 +255,10 @@ def open_application(command):
         }
 
         if target in websites:
-            return open_edge_website(target, websites[target], new_tab=True)
-
-        print(f"Website '{target}' is not configured.")
-        return True
+            return open_edge_website(
+                target, websites[target], new_tab=True
+            )
+        return False
 
     # YouTube voice controls
     if command in ["pause youtube", "pause video"]:
@@ -261,7 +270,7 @@ def open_application(command):
     if command in ["previous youtube video", "previous video", "prev video"]:
         return control_youtube("previous")
 
-    # Google Maps directions and search
+    # Google Maps directions
     directions_match = re.match(
         r"^(?:give me directions to|directions to|navigate to|take me to|go to)\s+(.+)$",
         command,
@@ -292,7 +301,7 @@ def open_application(command):
     if command in ["open maps", "open google maps", "launch maps"]:
         return open_edge_website("maps", "https://maps.google.com/")
 
-    # GitHub search - check before YouTube and generic website handlers
+    # GitHub search
     github_search_match = re.match(
         r"^(?:search github for|find on github)\s+(.+)$",
         command,
@@ -303,7 +312,7 @@ def open_application(command):
         url = "https://github.com/search?q=" + quote(query, safe="")
         return open_edge_website("github", url)
 
-    # Open GitHub profile or repository
+    # GitHub profile, website, or repository
     github_match = re.match(
         r"^(?:open|go to|visit)\s+github(?:\s+(.+))?$",
         command,
@@ -323,68 +332,113 @@ def open_application(command):
             url = "https://github.com/" + quote(target, safe="/")
 
         return open_edge_website("github", url)
-
-    # Open a GitHub URL directly
-    github_url_match = re.match(
-        r"^(?:open|go to|visit)\s+(?:https?://)?github\.com/(\S+)$",
+    # YouTube search: handle different natural phrases
+    youtube_search_match = re.match(
+        r"^(?:"
+        r"(?:search|find)\s+(.+?)\s+on\s+youtube|"
+        r"(?:search|find)\s+youtube\s+for\s+(.+)|"
+        r"youtube\s+search\s+for\s+(.+)|"
+        r"(?:open\s+)?youtube\s+and\s+search(?:\s+for)?\s+(.+)"
+        r")$",
         command,
     )
 
-    if github_url_match:
-        url = "https://github.com/" + github_url_match.group(1)
-        return open_edge_website("github", url)
+    if youtube_search_match:
+        query = next(
+            (group.strip() for group in youtube_search_match.groups() if group),
+            "",
+        )
+        if query:
+            url = (
+                "https://www.youtube.com/results?search_query="
+                + quote(query, safe="")
+            )
+            return open_edge_website("youtube", url)
 
-    # Google search
+
+    if youtube_search_match:
+        query = youtube_search_match.group(1).strip()
+        url = (
+            "https://www.youtube.com/results?search_query="
+            + quote(query, safe="")
+        )
+        return open_edge_website("youtube", url)
+
+
+    # Google searches: support several natural phrases
     google_search_match = re.match(
-        r"^(?:open google and search|search google for|google search for|search for)\s+(.+)$",
+        r"^(?:"
+        r"search(?:\s+google)?(?:\s+for)?|"
+        r"google\s+search(?:\s+for)?|"
+        r"open\s+google\s+and\s+search(?:\s+for)?|"
+        r"open\s+google\s+for|"
+        r"google\s+for"
+        r")\s+(.+)$",
         command,
     )
 
     if google_search_match:
         query = google_search_match.group(1).strip()
-        url = "https://www.google.com/search?q=" + quote(query, safe="")
-        return open_edge_website("google", url)
+        if query:
+            url = "https://www.google.com/search?q=" + quote(query, safe="")
+            return open_edge_website("google", url)
 
+    # Open Google homepage only when no search query was given
+    if command in ["open google", "go to google", "visit google"]:
+        return open_edge_website("google", "https://www.google.com/")
     # YouTube search and play
-    if command in ["open youtube"]:
-        return open_edge_website("youtube", "https://www.youtube.com")
+    youtube_combined_match = re.match(
+        r"^(?:open\s+)?youtube\s+and\s+search(?:\s+for)?\s+(.+)$",
+        command,
+    )
+
+    if youtube_combined_match:
+        query = youtube_combined_match.group(1).strip()
+        url = (
+            "https://www.youtube.com/results?search_query="
+            + quote(query, safe="")
+        )
+        return open_edge_website("youtube", url)
+
+    if command == "open youtube":
+        return open_edge_website(
+            "youtube", "https://www.youtube.com"
+        )
 
     youtube_search_match = re.match(
         r"^(?:search|find)\s+(.+?)(?:\s+on\s+youtube)?$",
         command,
     )
 
-    if youtube_search_match and (
-        command.endswith("on youtube")
-        or command.startswith(("search ", "find "))
-    ):
+    if youtube_search_match and command.startswith(("search ", "find ")):
         query = youtube_search_match.group(1).strip()
-        url = "https://www.youtube.com/results?search_query=" + quote(query, safe="")
+        url = (
+            "https://www.youtube.com/results?search_query="
+            + quote(query, safe="")
+        )
         return open_edge_website("youtube", url)
 
     if re.match(r"^(?:play|open youtube and play)\s+.+$", command):
         return play_youtube_video(command)
 
+
     # Other websites
     websites = {
         "youtube": "https://www.youtube.com",
-        "google": "https://www.google.com",
-        "github": "https://github.com",
         "gmail": "https://mail.google.com",
         "chatgpt": "https://chatgpt.com",
-        "maps": "https://maps.google.com/",
-        "spotify": "https://open.spotify.com/",
-        "instagram": "https://www.instagram.com/",
-        "facebook": "https://www.facebook.com/",
-        "linkedin": "https://www.linkedin.com/",
-        "reddit": "https://www.reddit.com/",
-        "wikipedia": "https://www.wikipedia.org/",
-        "amazon": "https://www.amazon.in/",
-        "whatsapp": "https://web.whatsapp.com/",
-        "google drive": "https://drive.google.com/",
-        "google calendar": "https://calendar.google.com/",
-        "google meet": "https://meet.google.com/",
-        "google translate": "https://translate.google.com/",
+        "spotify": "https://open.spotify.com",
+        "instagram": "https://www.instagram.com",
+        "facebook": "https://www.facebook.com",
+        "linkedin": "https://www.linkedin.com",
+        "reddit": "https://www.reddit.com",
+        "wikipedia": "https://www.wikipedia.org",
+        "amazon": "https://www.amazon.in",
+        "whatsapp": "https://web.whatsapp.com",
+        "google drive": "https://drive.google.com",
+        "google calendar": "https://calendar.google.com",
+        "google meet": "https://meet.google.com",
+        "google translate": "https://translate.google.com",
     }
 
     for name, url in websites.items():
@@ -412,6 +466,7 @@ def open_application(command):
 
     return False
 
+
 def close_application(command):
     if not command.startswith("close "):
         return False
@@ -425,13 +480,26 @@ def close_application(command):
         "gmail": "gmail",
         "google drive": "google drive",
         "chatgpt": "chatgpt",
+        "github": "github",
+        "spotify": "spotify",
+        "instagram": "instagram",
+        "whatsapp": "whatsapp",
+        "facebook": "facebook",
+        "linkedin": "linkedin",
+        "reddit": "reddit",
+        "wikipedia": "wikipedia",
+        "amazon": "amazon",
+        "amazon.in": "amazon",
     }
+
     requested = aliases.get(requested, requested)
 
     index = None
+
     for i in range(len(opened_stack) - 1, -1, -1):
         entry = opened_stack[i]
         name = entry["name"] if isinstance(entry, dict) else entry
+
         if name.lower() == requested:
             index = i
             break
@@ -442,13 +510,9 @@ def close_application(command):
 
     entry = opened_stack[index]
 
-    
     if isinstance(entry, dict) and entry.get("type") == "website":
         try:
             from playwright.sync_api import sync_playwright
-            from urllib.parse import urlparse
-
-            target_name = entry.get("name", requested)
 
             domains = {
                 "youtube": ["youtube.com"],
@@ -456,26 +520,35 @@ def close_application(command):
                 "google": ["google.com"],
                 "gmail": ["mail.google.com"],
                 "github": ["github.com"],
-                "chatgpt": ["chatgpt.com"],
+                "chatgpt": ["chatgpt.com", "chat.openai.com"],
                 "spotify": ["open.spotify.com"],
                 "instagram": ["instagram.com"],
                 "whatsapp": ["web.whatsapp.com"],
                 "google drive": ["drive.google.com"],
+                "facebook": ["facebook.com"],
+                "linkedin": ["linkedin.com"],
+                "reddit": ["reddit.com"],
+                "wikipedia": ["wikipedia.org"],
+                "amazon": ["amazon."],
             }
 
+            target_name = entry.get("name", requested).lower()
             patterns = domains.get(target_name, [target_name])
 
             with sync_playwright() as p:
                 browser = p.chromium.connect_over_cdp(EDGE_DEBUG_URL)
 
                 closed = False
+
                 for context in browser.contexts:
-                    for page in list(context.pages):
+                    for page in reversed(context.pages):
                         page_url = page.url.lower()
+
                         if any(pattern in page_url for pattern in patterns):
                             page.close()
                             closed = True
                             break
+
                     if closed:
                         break
 
@@ -490,6 +563,9 @@ def close_application(command):
             print(f"Could not close {requested} tab: {error}")
 
         return True
+
+    print(f"Closing {requested} is not supported for this entry.")
+    return True
 
 
 def start_timer(minutes):
@@ -561,19 +637,40 @@ def main():
 )
                     command = recognizer.recognize_google(audio).lower().strip()
                     print("You said:", command)
+
+
+                    if command in (
+                        "start study mode",
+                        "study mode",
+                        "begin study mode",
+                    ):
+                            run_study_mode()
+                            continue
                     if re.search(r"\b(exit|quit)\b|stop listening", command):
                         print("Voice assistant stopped.")
                         break
                     if close_application(command):
                         continue
+
+                    if switch_tab(command):
+                        continue
+
+                    if browser_navigation(command):
+                        continue
+
+                    if control_volume(command):
+                        continue
+
                     if open_application(command):
                         continue
+
                     if "timer" in command:
                         minutes = extract_minutes(command)
                         if minutes is None or minutes <= 0:
                             print("Please say a duration, like ten minutes.")
                             continue
                         start_timer(minutes)
+
                     else:
                         print("Command not recognized. Try: set a timer for ten minutes.")
                 except sr.UnknownValueError:
@@ -584,6 +681,222 @@ def main():
         print("\nVoice assistant stopped.")
     except (OSError, AttributeError) as error:
         print("Microphone error:", error)
+
+def switch_tab(command):
+    command = command.lower().strip()
+
+    aliases = {
+        "youtube": ["youtube.com"],
+        "github": ["github.com"],
+        "google": ["google.com"],
+        "gmail": ["mail.google.com"],
+        "chatgpt": ["chatgpt.com", "chat.openai.com"],
+    }
+
+    match = re.match(
+        r"^(?:switch to|go to|change to)\s+(.+?)\s+tab$",
+        command,
+    )
+
+    if not match:
+        return False
+
+    requested = match.group(1).strip()
+    patterns = aliases.get(requested)
+
+    if not patterns:
+        print(f"I don't know the website: {requested}")
+        return True
+
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            browser = p.chromium.connect_over_cdp(EDGE_DEBUG_URL)
+
+            for context in browser.contexts:
+                for page in reversed(context.pages):
+                    if any(pattern in page.url.lower() for pattern in patterns):
+                        page.bring_to_front()
+                        print(f"Switched to {requested}.")
+                        return True
+
+        print(f"No open tab found for {requested}.")
+
+    except Exception as error:
+        print(f"Could not switch tabs: {error}")
+
+    return True
+
+
+def browser_navigation(command):
+    command = command.lower().strip()
+
+    actions = {
+        "go back": "back",
+        "back": "back",
+        "go forward": "forward",
+        "forward": "forward",
+        "refresh page": "refresh",
+        "refresh": "refresh",
+        "reload page": "refresh",
+        "reload": "refresh",
+    }
+
+    action = actions.get(command)
+
+    if action is None:
+        return False
+
+    try:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            browser = p.chromium.connect_over_cdp(EDGE_DEBUG_URL)
+
+            pages = [
+                page
+                for context in browser.contexts
+                for page in context.pages
+                if not page.is_closed()
+            ]
+
+            if not pages:
+                print("No open browser tab found.")
+                return True
+
+            page = next(
+                (page for page in pages if page.url != "about:blank"),
+                pages[-1],
+            )
+
+            if action == "back":
+                page.go_back()
+                print("Went back.")
+
+            elif action == "forward":
+                page.go_forward()
+                print("Went forward.")
+
+            elif action == "refresh":
+                page.reload()
+                print("Page refreshed.")
+
+    except Exception as error:
+        print(f"Browser navigation failed: {error}")
+
+    return True
+
+
+
+def control_volume(command):
+    command = command.lower().strip()
+
+    import re
+
+    aliases = {
+        "louder": "up",
+        "increase sound": "up",
+        "sound up": "up",
+        "softer": "down",
+        "lower sound": "down",
+        "sound down": "down",
+        "mute": "mute",
+        "sound off": "mute",
+        "sound on": "unmute",
+        "unmute": "unmute",
+        "full volume": "full",
+        "maximum volume": "full",
+    }
+
+    action = aliases.get(command)
+
+    match = re.fullmatch(
+        r"(?:(?:set )?volume to )?(\d{1,3})(?: percent|%)?",
+        command,
+    )
+
+    if action is None and match is None:
+        return False
+
+    try:
+        from pycaw.pycaw import AudioUtilities
+
+        device = AudioUtilities.GetSpeakers()
+        volume = device.EndpointVolume
+        current = volume.GetMasterVolumeLevelScalar()
+
+        if action == "up":
+            volume.SetMasterVolumeLevelScalar(
+                min(1.0, current + 0.10), None
+            )
+            print("Volume increased.")
+
+        elif action == "down":
+            volume.SetMasterVolumeLevelScalar(
+                max(0.0, current - 0.10), None
+            )
+            print("Volume decreased.")
+
+        elif action == "mute":
+            volume.SetMute(1, None)
+            print("Muted.")
+
+        elif action == "unmute":
+            volume.SetMute(0, None)
+            print("Sound on.")
+
+        elif action == "full":
+            volume.SetMasterVolumeLevelScalar(1.0, None)
+            print("Full volume.")
+
+        elif match:
+            percentage = int(match.group(1))
+
+            if not 0 <= percentage <= 100:
+                print("Choose a number from 0 to 100.")
+                return True
+
+            volume.SetMasterVolumeLevelScalar(
+                percentage / 100.0, None
+            )
+            print(f"Volume set to {percentage} percent.")
+
+    except Exception as error:
+        print(f"Could not control volume: {error}")
+
+    return True
+
+
+def run_study_mode():
+    try:
+        response = requests.post(
+            f"{API_URL}/workflow/run",
+            params={"name": "Study Mode"},
+            timeout=10,
+        )
+        response.raise_for_status()
+        result = response.json()
+
+        if result.get("action") != "study_mode":
+            print("Study Mode workflow did not start:", result)
+            return
+
+        print("Study Mode timer started.")
+
+        open_edge_website(
+            "youtube",
+            "https://www.youtube.com/results?search_query=Java%20tutorials",
+        )
+
+        control_volume("30 percent")
+
+        print("Study Mode is ready!")
+
+    except requests.RequestException as error:
+        print("Could not start Study Mode. Check that FastAPI is running.")
+        print(error)
+
 
 
 if __name__ == "__main__":
