@@ -1,167 +1,116 @@
-# Teachable Voice Automation
+# Teachable Voice Automation 🎙️
 
-A Python-based voice automation project that lets users control browser actions, launch supported applications, manage timers, and run saved workflows using voice commands or a web dashboard.
+A Python-based voice automation project that lets users control browser actions and productivity timers through voice commands and a web dashboard.
 
-## Features
+## 🚀 Features
 
-- **Voice commands:** Recognizes spoken commands through a microphone.
-- **Browser automation:** Opens websites, searches Google and YouTube, and manages browser tabs.
-- **Smart timer:** Runs timers in the background and provides an audible and spoken alert when they finish.
-- **Study Mode:** Starts a study workflow with supported browser actions and volume adjustment.
-- **Web dashboard:** Provides a simple interface to send browser commands.
-- **Workflow API:** Uses FastAPI to save and execute workflows.
-- **MongoDB integration:** Stores workflows and records execution history.
+- **Voice Commands:** Recognizes spoken commands using speech recognition.
+- **Browser Automation:** Opens websites, searches for content, and manages browser tabs.
+- **Web Dashboard:** Provides an interface for entering commands and monitoring backend status.
+- **Smart Timer:** Starts productivity timers with audio and voice notifications.
+- **Workflow Management:** Saves and retrieves workflows using MongoDB.
+- **Command History:** Displays previous automation activity.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - Python
-- FastAPI and Uvicorn
-- MongoDB Atlas with PyMongo
+- FastAPI
+- MongoDB Atlas
+- PyMongo
 - SpeechRecognition
 - Playwright
-- Requests
-- Pycaw
-- HTML, CSS and JavaScript
+- HTML, CSS, and JavaScript
 
-## Requirements
-
-- Windows 10 or Windows 11
-- Python 3.10 or newer
-- Microsoft Edge
-- A working microphone for voice commands
-- A MongoDB Atlas database and connection URI
-
-## Project Structure
+## 📁 Project Structure
 
 ```text
 tech-automation/
 ├── backend/
 │   ├── main.py
 │   ├── voice_control.py
-│   ├── test_mongo.py
-│   └── requirements.txt
+│   ├── requirements.txt
+│   └── test_mongo.py
 ├── frontend/
 │   └── index.html
 ├── .gitignore
 └── README.md
 ```
 
-## Setup
+## ⚙️ Setup
 
 ### 1. Clone the repository
 
-```powershell
-git clone YOUR_GITHUB_REPOSITORY_URL
-cd tech-automation
+```bash
+git clone https://github.com/Barathvikash08/teachable-voice-automation.git
+cd teachable-voice-automation
 ```
 
-Replace `YOUR_GITHUB_REPOSITORY_URL` with your repository's actual URL.
-
 ### 2. Create and activate a virtual environment
+
+On Windows PowerShell:
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks activation, open a PowerShell terminal and use this temporary, terminal-session-only workaround:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\venv\Scripts\Activate.ps1
-```
-
 ### 3. Install dependencies
 
 ```powershell
-python -m pip install -r backend\requirements.txt
+pip install -r backend/requirements.txt
 ```
-
-If microphone support fails because PyAudio cannot install on your system, resolve that dependency before testing voice recognition.
 
 ### 4. Configure environment variables
 
-Create a `.env` file inside the `backend` directory and add your own MongoDB connection URI:
+Create a `.env` file in the project root and add your MongoDB connection string:
 
 ```text
-MONGO_URI=YOUR_MONGODB_CONNECTION_URI
+MONGO_URI=your_mongodb_connection_string
 ```
 
-Replace the placeholder with your actual URI. Never commit `.env` or publish database credentials.
+Replace the placeholder with your own connection string. Never commit your actual `.env` file.
 
-Make sure your MongoDB Atlas network access and database permissions are configured appropriately.
-
-## Running the Project
-
-Keep each service running in its own VS Code terminal.
-
-### Terminal 1: Start the backend
+### 5. Start the backend
 
 ```powershell
 cd backend
 python -m uvicorn main:app --reload --port 8000
 ```
 
-API documentation:
+Open `http://127.0.0.1:8000/docs` to view the API documentation.
 
-http://127.0.0.1:8000/docs
+### 6. Start the dashboard
 
-### Terminal 2: Start the dashboard
-
-From the project root:
+Open another terminal from the project root:
 
 ```powershell
 python -m http.server 5500 --directory frontend
 ```
 
-Open the dashboard:
+Open `http://127.0.0.1:5500/` in your browser.
 
-http://127.0.0.1:5500/
+### 7. Run voice control
 
-### Terminal 3: Start voice control
-
-Activate the project's virtual environment, then run:
+In another terminal, navigate to `backend`, activate the virtual environment if needed, and run:
 
 ```powershell
-cd backend
 python voice_control.py
 ```
 
-Run the voice assistant only after the backend is available.
+Allow microphone access when prompted and try a supported voice command.
 
-## Example Commands
+## 🔐 Security
 
-Commands depend on the features currently configured in the project. Examples include:
+- Keep credentials in environment variables.
+- Do not commit `.env` files or secrets.
+- Restrict database access using appropriate MongoDB Atlas network and database permissions.
 
-- "Search Java tutorials on YouTube"
-- "Open YouTube"
-- "Switch tab"
-- "Start a timer for one minute"
-- "Start study mode"
-- "Stop listening"
+## 🎯 Project Goal
 
-## API Endpoints
+This project explores voice-controlled desktop and browser automation, API development, database integration, and productivity tools using Python.
 
-The FastAPI application includes endpoints for:
+## 👨‍💻 Author
 
-- Checking backend status
-- Saving and listing workflows
-- Executing workflows
-- Viewing execution history
+**Barath Vikash**
 
-Visit `/docs` on the local backend to inspect the current API routes and request formats.
-
-## Security Notes
-
-- Never commit `.env`, MongoDB URIs, passwords, API keys, or other secrets.
-- Keep `venv/` and Python cache files out of version control.
-- Use a restricted MongoDB database account rather than unnecessarily broad permissions.
-- Review all files before pushing the repository to GitHub.
-
-## Current Status
-
-The project has working voice-command, browser-control, timer, Study Mode, dashboard, and workflow features that have been tested locally. Further improvements can focus on error handling, automated tests, documentation, and cross-system compatibility.
-
-## Author
-
-Developed as a personal Python automation project.
+GitHub: [Barathvikash08](https://github.com/Barathvikash08)
