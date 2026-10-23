@@ -1,10 +1,10 @@
 
-# Python
+# Python cache files
 __pycache__/
 *.py[cod]
 *.pyd
 
-# Virtual environment
+# Virtual environments
 venv/
 .venv/
 
@@ -13,8 +13,8 @@ venv/
 .env.*
 !.env.example
 
-# Editor files
-.vscode/
-
-# Test and cache files
+# Testing
 .pytest_cache/
+
+# Editor settings
+.vscode/
