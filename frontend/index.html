@@ -100,7 +100,7 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 18px;
             margin-top: 25px;
             align-items: start;
@@ -132,11 +132,32 @@
             background: #202b45;
             color: white;
             padding: 11px 15px;
+            margin: 3px 0;
             cursor: pointer;
         }
 
         button.action:hover {
             background: #303e60;
+        }
+
+        input {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px;
+            color: white;
+            background: #1e293b;
+            border: 1px solid #64748b;
+            border-radius: 8px;
+            pointer-events: auto;
+            user-select: text;
+        }
+
+        label {
+            display: block;
+            color: #cbd5e1;
+            font-size: 13px;
+            margin-top: 10px;
         }
 
         .command-box {
@@ -147,20 +168,14 @@
         }
 
         #browserCommand {
-            display: block;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 12px;
-            color: white;
-            background: #1e293b;
-            border: 1px solid #64748b;
-            border-radius: 8px;
+            flex: 1;
+            min-width: 0;
+            margin: 0;
             cursor: text;
-            pointer-events: auto;
-            user-select: text;
         }
 
-        #workflowList {
+        #workflowList,
+        #historyList {
             margin-top: 16px;
             overflow-wrap: anywhere;
         }
@@ -188,11 +203,42 @@
             overflow-wrap: anywhere;
         }
 
+        #timerStatus,
+        #browserStatus {
+            margin-top: 14px;
+            overflow-wrap: anywhere;
+        }
+
         footer {
             text-align: center;
             color: #64748b;
             font-size: 12px;
             margin-top: 30px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            header {
+                margin-bottom: 25px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .command-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .command-box button {
+                width: 100%;
+            }
+
+            .card {
+                padding: 18px;
+            }
         }
     </style>
 </head>
@@ -219,14 +265,11 @@
                 aria-label="Start voice input"
             >🎤</button>
 
-            <p id="voiceStatus">
-                Click the microphone to try voice input.
-            </p>
+            <p id="voiceStatus">Click the microphone to try voice input.</p>
         </section>
 
         <section class="grid">
 
-            <!-- Browser Control -->
             <article class="card">
                 <h2>🌐 Browser Control</h2>
                 <p>Open websites and search the web using voice commands.</p>
@@ -242,17 +285,23 @@
                 <button class="action" onclick="sendBrowserCommand('open github')">
                     Open GitHub
                 </button>
+
+                <button class="action" onclick="sendBrowserCommand('start study mode')">
+                    Start Study Mode
+                </button>
+
+                <button class="action" onclick="sendBrowserCommand('start code mode')">
+                    Start Code Mode (LeetCode)
+                </button>
+
                 <div class="command-box">
                     <input
                         type="text"
                         id="browserCommand"
                         placeholder="Try: search google for Java tutorials"
-                    />
-
-                    <button
-                        class="action"
-                        onclick="runCustomBrowserCommand()"
                     >
+
+                    <button class="action" onclick="runCustomBrowserCommand()">
                         Run Command
                     </button>
                 </div>
@@ -262,53 +311,83 @@
                 </div>
             </article>
 
-            <!-- Technical Workflow -->
             <article class="card">
                 <h2>⚙️ Technical Workflow</h2>
                 <p>View workflows saved in your MongoDB database.</p>
 
-                <button
-                    class="action"
-                    onclick="loadWorkflows()"
-                >
+                <button class="action" onclick="loadWorkflows()">
                     View Saved Workflows
                 </button>
 
                 <div id="workflowList"></div>
             </article>
 
-            <!-- Smart Timer -->
             <article class="card">
                 <h2>⏱️ Smart Timer</h2>
                 <p>Manage your study sessions and timers.</p>
 
-                <button
-                    class="action"
-                    onclick="showMessage('Timer')"
+                <label for="timerName">Timer name</label>
+                <input
+                    type="text"
+                    id="timerName"
+                    placeholder="e.g. Study Timer"
                 >
-                    Timer controls
+
+                <label for="timerMinutes">Duration (minutes)</label>
+                <input
+                    type="number"
+                    id="timerMinutes"
+                    min="1"
+                    step="1"
+                    value="1"
+                    placeholder="Enter minutes"
+                >
+
+                <button class="action" onclick="startDashboardTimer()">
+                    Start Timer
                 </button>
+
+                <div id="timerStatus" class="workflow-item">
+                    Timer is ready.
+                </div>
             </article>
 
-            <!-- Automation -->
             <article class="card">
                 <h2>🤖 Automation</h2>
-                <p>Run tasks through your voice automation assistant.</p>
+                <p>Run commands using the command box or microphone.</p>
 
                 <button
                     class="action"
                     onclick="showMessage('Automation')"
                 >
-                    View controls
+                    Use Automation
                 </button>
+
+                <div class="workflow-item">
+                    Try commands such as:
+                    <br>Open YouTube
+                    <br>Search Google for Java tutorials
+                    <br>Open GitHub
+                    <br>Switch tab
+                </div>
             </article>
 
         </section>
 
-        <!-- Recent Activity -->
         <section class="card activity">
-            <h2>Recent Activity</h2>
-            <div id="activityLog">Dashboard initialized.</div>
+            <h2>📋 Recent Command History</h2>
+
+            <button class="action" onclick="loadCommandHistory()">
+                Refresh History
+            </button>
+
+            <div id="historyList">
+                Command history will appear here.
+            </div>
+
+            <div id="activityLog">
+                Activity will appear here.
+            </div>
         </section>
 
         <footer>
@@ -325,23 +404,191 @@
 
         const API_URL = "http://127.0.0.1:8000";
 
-        function showMessage(feature) {
-            const message = feature + " selected — connection coming next.";
-            voiceStatus.textContent = message;
-            activityLog.textContent = message;
+        async function showMessage(feature) {
+            if (feature.toLowerCase().includes("timer")) {
+                voiceStatus.textContent =
+                    "Timer selected. Use the timer controls to start a timer.";
+                document.getElementById("timerName").focus();
+                return;
+            }
+
+            if (feature.toLowerCase().includes("automation")) {
+                voiceStatus.textContent =
+                    "Automation selected. Enter a command to run your automation.";
+
+                document.getElementById("browserCommand").focus();
+                return;
+            }
+
+            voiceStatus.textContent = feature + " selected.";
         }
 
-        micButton.addEventListener("click", () => {
-            voiceStatus.textContent = "Microphone connection will be added in the next step.";
-            activityLog.textContent = "Microphone button clicked.";
-        });
+        async function readResponse(response) {
+            const text = await response.text();
+
+            try {
+                return text ? JSON.parse(text) : {};
+            } catch {
+                return {
+                    message: text || "The server returned an empty response."
+                };
+            }
+        }
+
+        function responseMessage(data, fallback) {
+            if (typeof data.detail === "string") {
+                return data.detail;
+            }
+
+            if (Array.isArray(data.detail)) {
+                return data.detail
+                    .map(item => item.msg || JSON.stringify(item))
+                    .join("; ");
+            }
+
+            return data.message || fallback;
+        }
+
+        async function startDashboardTimer() {
+            const nameInput = document.getElementById("timerName");
+            const minutesInput = document.getElementById("timerMinutes");
+            const status = document.getElementById("timerStatus");
+
+            const name = nameInput.value.trim();
+            const minutes = Number(minutesInput.value);
+
+            if (!name) {
+                status.textContent = "Please enter a timer name.";
+                nameInput.focus();
+                return;
+            }
+
+            if (
+                !Number.isFinite(minutes) ||
+                !Number.isInteger(minutes) ||
+                minutes <= 0
+            ) {
+                status.textContent =
+                    "Enter a whole number of minutes greater than zero.";
+                minutesInput.focus();
+                return;
+            }
+
+            status.textContent = "Saving timer workflow...";
+
+            try {
+                const saveResponse = await fetch(
+                    `${API_URL}/workflow?name=${encodeURIComponent(name)}&action=start_timer&value=${minutes}`,
+                    { method: "POST" }
+                );
+
+                const saveData = await readResponse(saveResponse);
+
+                if (!saveResponse.ok) {
+                    throw new Error(
+                        responseMessage(saveData, "Could not save timer.")
+                    );
+                }
+
+                status.textContent = "Workflow saved. Starting timer...";
+
+                const runResponse = await fetch(
+                    `${API_URL}/workflow/run?name=${encodeURIComponent(name)}`,
+                    { method: "POST" }
+                );
+
+                const runData = await readResponse(runResponse);
+
+                if (!runResponse.ok || !runData.action) {
+                    throw new Error(
+                        responseMessage(runData, "Could not start timer.")
+                    );
+                }
+
+                status.textContent = runData.message || "Timer started.";
+                activityLog.textContent =
+                    `Timer "${name}" requested for ${minutes} minute(s).`;
+
+                await loadWorkflows();
+                await loadCommandHistory();
+
+            } catch (error) {
+                status.textContent =
+                    "Timer failed: " + error.message +
+                    " Check that the backend and MongoDB are reachable.";
+
+                activityLog.textContent = "Timer error: " + error.message;
+                console.error("Dashboard timer error:", error);
+            }
+        }
+
+        const SpeechRecognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        let recognition;
+        let isListening = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = "en-IN";
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                micButton.textContent = "🔴";
+                micButton.classList.add("listening");
+                voiceStatus.textContent = "Listening... Speak your command.";
+                activityLog.textContent = "Microphone started listening.";
+            };
+
+            recognition.onresult = async (event) => {
+                const command = event.results[0][0].transcript.trim();
+
+                voiceStatus.textContent = "Recognized: " + command;
+                activityLog.textContent = "Recognized command: " + command;
+
+                await sendBrowserCommand(command);
+            };
+
+            recognition.onerror = (event) => {
+                voiceStatus.textContent = "Microphone error: " + event.error;
+                activityLog.textContent =
+                    "Voice recognition failed: " + event.error;
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                micButton.textContent = "🎤";
+                micButton.classList.remove("listening");
+            };
+
+            micButton.addEventListener("click", () => {
+                if (isListening) {
+                    recognition.stop();
+                    return;
+                }
+
+                try {
+                    recognition.start();
+                } catch (error) {
+                    voiceStatus.textContent =
+                        "Could not start microphone. Try again.";
+                }
+            });
+        } else {
+            micButton.addEventListener("click", () => {
+                voiceStatus.textContent =
+                    "Speech recognition is not supported. Try Microsoft Edge.";
+            });
+        }
 
         async function checkBackend() {
             const status = document.getElementById("connectionStatus");
             const dot = document.querySelector(".dot");
 
             try {
-                const response = await fetch(API_URL + "/");
+                const response = await fetch(`${API_URL}/`);
 
                 if (!response.ok) {
                     throw new Error("Backend unavailable");
@@ -349,6 +596,7 @@
 
                 status.textContent = "Backend connected";
                 dot.style.background = "#22c55e";
+
             } catch (error) {
                 status.textContent = "Backend offline";
                 dot.style.background = "#ef4444";
@@ -359,19 +607,19 @@
             workflowList.textContent = "Loading workflows...";
 
             try {
-                const response = await fetch(API_URL + "/workflow");
+                const response = await fetch(`${API_URL}/workflow`);
+                const workflows = await readResponse(response);
 
                 if (!response.ok) {
-                    throw new Error("Could not fetch workflows");
+                    throw new Error(
+                        responseMessage(workflows, "Could not fetch workflows.")
+                    );
                 }
 
-                const workflows = await response.json();
                 workflowList.replaceChildren();
 
                 if (!Array.isArray(workflows) || workflows.length === 0) {
                     workflowList.textContent = "No workflows saved yet.";
-                    voiceStatus.textContent = "No saved workflows found.";
-                    activityLog.textContent = "Checked saved workflows: none found.";
                     return;
                 }
 
@@ -383,34 +631,32 @@
                     name.textContent = workflow.name ?? "Unnamed workflow";
 
                     const details = document.createElement("div");
-                    details.textContent = "Action: " + (workflow.action ?? "Not specified");
+                    details.textContent =
+                        "Action: " + (workflow.action ?? "Not specified");
 
                     const value = document.createElement("div");
-                    value.textContent = "Value: " + (workflow.value ?? "Not specified");
+                    value.textContent =
+                        "Value: " + (workflow.value ?? "Not specified");
 
                     item.append(name, details, value);
                     workflowList.appendChild(item);
                 });
 
-                voiceStatus.textContent = "Saved workflows loaded successfully.";
-                activityLog.textContent = "Loaded " + workflows.length + " saved workflow(s).";
-
             } catch (error) {
-                workflowList.textContent = "Could not load workflows. Check the backend connection.";
-                voiceStatus.textContent = "Failed to load workflows.";
-                activityLog.textContent = "Workflow loading failed: " + error.message;
+                workflowList.textContent =
+                    "Could not load workflows: " + error.message;
+
+                activityLog.textContent =
+                    "Workflow loading failed: " + error.message;
             }
         }
-
-        checkBackend();
-        setInterval(checkBackend, 5000);
 
         async function sendBrowserCommand(command) {
             const status = document.getElementById("browserStatus");
             status.textContent = `Running: ${command}...`;
 
             try {
-                const response = await fetch(`${API_URL}/browser/command`, {
+                const response = await fetch(`${API_URL}/command/execute`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -418,14 +664,36 @@
                     body: JSON.stringify({ command })
                 });
 
-                const result = await response.json();
-                status.textContent = result.message || "Command completed.";
+                const result = await readResponse(response);
 
-                if (!response.ok || !result.success) {
-                    status.textContent = `Error: ${status.textContent}`;
+                if (!response.ok) {
+                    throw new Error(
+                        responseMessage(result, "Command failed.")
+                    );
                 }
+
+                const message =
+                    result.message || "Command request completed.";
+
+                if (result.success === false) {
+                    throw new Error(message);
+                }
+
+                status.textContent = message;
+                voiceStatus.textContent = message;
+                activityLog.textContent = command + " — " + message;
+
+                await loadCommandHistory();
+
             } catch (error) {
-                status.textContent = "Could not connect to backend. Check that the server is running.";
+                status.textContent =
+                    "Command failed: " + error.message;
+
+                voiceStatus.textContent =
+                    "Command failed: " + error.message;
+
+                activityLog.textContent =
+                    "Command error: " + error.message;
             }
         }
 
@@ -434,19 +702,114 @@
             const command = input.value.trim();
 
             if (!command) {
-                document.getElementById("browserStatus").textContent = "Please enter a browser command.";
+                document.getElementById("browserStatus").textContent =
+                    "Please enter a browser command.";
+                input.focus();
                 return;
             }
 
             await sendBrowserCommand(command);
         }
 
-        // Allow pressing 'Enter' key inside the input box to run command
-        document.getElementById("browserCommand").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                runCustomBrowserCommand();
+        document
+            .getElementById("browserCommand")
+            .addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                    runCustomBrowserCommand();
+                }
+            });
+
+        async function loadCommandHistory() {
+            const historyList = document.getElementById("historyList");
+
+            historyList.textContent = "Loading command history...";
+
+            try {
+                const response = await fetch(`${API_URL}/history`);
+                const data = await readResponse(response);
+
+                if (!response.ok) {
+                    throw new Error(
+                        responseMessage(data, "Could not fetch command history.")
+                    );
+                }
+
+                const history = Array.isArray(data)
+                    ? data
+                    : data.history || [];
+
+                historyList.replaceChildren();
+
+                if (history.length === 0) {
+                    historyList.textContent =
+                        "No command history available yet.";
+                    return;
+                }
+
+                history.slice(0, 10).forEach((entry) => {
+                    const item = document.createElement("div");
+                    item.className = "workflow-item";
+
+                    const name = document.createElement("strong");
+                    name.textContent =
+                        entry.name ?? entry.command ?? "Unknown command";
+
+                    const action = document.createElement("div");
+                    action.textContent =
+                        "Action: " + (entry.action ?? "Not specified");
+
+                    const status = document.createElement("div");
+                    status.textContent =
+                        "Status: " + (entry.status ?? "Not specified");
+
+                    const message = document.createElement("div");
+                    message.textContent =
+                        "Message: " + (entry.message ?? "No message");
+
+                    const timestamp = document.createElement("div");
+                    let timestampValue = entry.timestamp;
+
+                    if (
+                        timestampValue &&
+                        typeof timestampValue === "object" &&
+                        timestampValue.$date
+                    ) {
+                        timestampValue = timestampValue.$date;
+                    }
+
+                    const parsedTimestamp = timestampValue
+                        ? new Date(timestampValue)
+                        : null;
+
+                    timestamp.textContent =
+                        parsedTimestamp &&
+                        !Number.isNaN(parsedTimestamp.getTime())
+                            ? "Time: " + parsedTimestamp.toLocaleString()
+                            : "Time: Not available";
+
+                    item.append(
+                        name,
+                        action,
+                        status,
+                        message,
+                        timestamp
+                    );
+
+                    historyList.appendChild(item);
+                });
+
+            } catch (error) {
+                historyList.textContent =
+                    "Could not load history: " + error.message;
             }
-        });
+        }
+
+        checkBackend();
+        loadWorkflows();
+        loadCommandHistory();
+
+        setInterval(checkBackend, 5000);
+        setInterval(loadWorkflows, 10000);
     </script>
 </body>
 </html>
