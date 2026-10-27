@@ -1,25 +1,28 @@
 # Teachable Voice Automation 🎙️
 
-A Python-based voice automation project that lets users control browser actions and productivity timers through voice commands and a web dashboard.
+A Python-based voice automation and productivity project that combines speech recognition, browser automation, a web dashboard, and workflow management to simplify everyday tasks.
 
 ## 🚀 Features
 
-- **Voice Commands:** Recognizes spoken commands using speech recognition.
-- **Browser Automation:** Opens websites, searches for content, and manages browser tabs.
-- **Web Dashboard:** Provides an interface for entering commands and monitoring backend status.
-- **Smart Timer:** Starts productivity timers with audio and voice notifications.
-- **Workflow Management:** Saves and retrieves workflows using MongoDB.
-- **Command History:** Displays previous automation activity.
+- **Voice Control:** Recognize spoken commands using speech recognition.
+- **Browser Automation:** Open websites, search for content, and manage browser tabs.
+- **Web Dashboard:** Submit commands through a browser-based interface and monitor backend status.
+- **Productivity Timers:** Start timers with audio alerts and voice notifications.
+- **Workflow Management:** Save and retrieve workflows using MongoDB Atlas.
+- **Command History:** Retrieve previous automation activity.
+- **REST API:** Manage workflows and automation commands through FastAPI endpoints.
 
 ## 🛠️ Tech Stack
 
-- Python
-- FastAPI
-- MongoDB Atlas
-- PyMongo
-- SpeechRecognition
-- Playwright
-- HTML, CSS, and JavaScript
+| Technology | Purpose |
+|---|---|
+| Python | Core application logic |
+| FastAPI | Backend API |
+| MongoDB Atlas | Cloud database |
+| PyMongo | MongoDB integration |
+| SpeechRecognition | Voice input |
+| Playwright | Browser automation |
+| HTML, CSS, JavaScript | Dashboard interface |
 
 ## 📁 Project Structure
 
@@ -36,7 +39,14 @@ tech-automation/
 └── README.md
 ```
 
-## ⚙️ Setup
+## ⚙️ Getting Started
+
+### Prerequisites
+
+- Python installed on Windows
+- Microsoft Edge for browser automation
+- A MongoDB Atlas account and database
+- A working microphone for voice commands
 
 ### 1. Clone the repository
 
@@ -45,14 +55,16 @@ git clone https://github.com/Barathvikash08/teachable-voice-automation.git
 cd teachable-voice-automation
 ```
 
-### 2. Create and activate a virtual environment
+### 2. Create a virtual environment
 
-On Windows PowerShell:
+Run these commands from the project root in PowerShell:
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
+
+If PowerShell blocks script execution, use an appropriate temporary execution-policy setting for the current session rather than changing the system-wide policy.
 
 ### 3. Install dependencies
 
@@ -60,57 +72,79 @@ python -m venv venv
 pip install -r backend/requirements.txt
 ```
 
-### 4. Configure environment variables
+### 4. Configure MongoDB
 
-Create a `.env` file in the project root and add your MongoDB connection string:
+Create a `.env` file in the project root:
 
 ```text
 MONGO_URI=your_mongodb_connection_string
 ```
 
-Replace the placeholder with your own connection string. Never commit your actual `.env` file.
+Replace the placeholder with your own MongoDB Atlas connection string.
+
+**Never commit your actual `.env` file or expose database credentials.** Configure your Atlas network access and database permissions appropriately.
 
 ### 5. Start the backend
+
+Open a terminal from the project root:
 
 ```powershell
 cd backend
 python -m uvicorn main:app --reload --port 8000
 ```
 
-Open `http://127.0.0.1:8000/docs` to view the API documentation.
+The backend should be available at:
+
+- API: http://127.0.0.1:8000/
+- Interactive API documentation: http://127.0.0.1:8000/docs
 
 ### 6. Start the dashboard
 
-Open another terminal from the project root:
+Open a second terminal from the project root:
 
 ```powershell
 python -m http.server 5500 --directory frontend
 ```
 
-Open `http://127.0.0.1:5500/` in your browser.
+Visit http://127.0.0.1:5500/ in your browser.
 
 ### 7. Run voice control
 
-In another terminal, navigate to `backend`, activate the virtual environment if needed, and run:
+Open a third terminal:
 
 ```powershell
+cd backend
+..\venv\Scripts\Activate.ps1
 python voice_control.py
 ```
 
-Allow microphone access when prompted and try a supported voice command.
+Allow microphone access where required and try a supported command.
 
 ## 🔐 Security
 
 - Keep credentials in environment variables.
-- Do not commit `.env` files or secrets.
-- Restrict database access using appropriate MongoDB Atlas network and database permissions.
+- Exclude `.env` files and virtual environments from version control.
+- Never publish database passwords, API keys, or private connection strings.
+- Use appropriate MongoDB Atlas network restrictions and database permissions.
 
-## 🎯 Project Goal
+## 🎯 Project Goals
 
-This project explores voice-controlled desktop and browser automation, API development, database integration, and productivity tools using Python.
+This project explores practical applications of voice-controlled automation, REST API development, database integration, browser interaction, and productivity tooling.
+
+## 🔮 Future Improvements
+
+- Improve command recognition and error handling.
+- Expand automated testing.
+- Improve dashboard feedback and usability.
+- Add clearer setup and troubleshooting documentation.
+- Package the application for easier installation.
 
 ## 👨‍💻 Author
 
 **Barath Vikash**
 
 GitHub: [Barathvikash08](https://github.com/Barathvikash08)
+
+---
+
+*Built as a learning project to explore Python automation and full-stack
